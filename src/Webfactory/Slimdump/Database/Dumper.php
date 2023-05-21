@@ -113,7 +113,7 @@ class Dumper
         $s .= " FROM `$table`";
         $s .= $tableConfig->getCondition();
 
-        $numRows = (int) $this->connection->fetchColumn("SELECT COUNT(*) FROM `$table`".$tableConfig->getCondition());
+        $numRows = (int) $this->connection->fetchOne("SELECT COUNT(*) FROM `$table`".$tableConfig->getCondition());
 
         if (0 === $numRows) {
             // Fail fast: No data to dump.
@@ -126,9 +126,7 @@ class Dumper
         $progress->setRedrawFrequency((int) max($numRows / 100, 1));
         $progress->start();
 
-        /** @var PDOConnection $wrappedConnection */
-        $wrappedConnection = $this->connection->getWrappedConnection();
-        $wrappedConnection->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
+        $this->setPdoAttribute($this->connection, PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
         $actualRows = 0;
 
         $this->outputFormatDriver->beginTableDataDump($asset, $tableConfig);
@@ -148,7 +146,7 @@ class Dumper
             $this->progressOutput->writeln(sprintf('<error>Expected %d rows, actually processed %d – verify results!</error>', $numRows, $actualRows));
         }
 
-        $wrappedConnection->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, true);
+        $this->setPdoAttribute($this->connection, PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, true);
 
         $this->outputFormatDriver->endTableDataDump($asset, $tableConfig);
     }
@@ -158,5 +156,18 @@ class Dumper
         $type = $column->getType();
 
         return $type instanceof BlobType || $type instanceof BinaryType;
+    }
+
+    protected function setPdoAttribute(Connection $connection, int $attribute, $value): void
+    {
+        while (method_exists($connection, 'getWrappedConnection') && !$connection instanceof PDO) {
+            $connection = $connection->getWrappedConnection();
+        }
+
+        if (!$connection instanceof PDO) {
+            return;
+        }
+
+        $connection->setAttribute($attribute, $value);
     }
 }

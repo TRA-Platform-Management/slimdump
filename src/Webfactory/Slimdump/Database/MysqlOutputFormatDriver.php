@@ -53,7 +53,7 @@ class MysqlOutputFormatDriver implements OutputFormatDriverInterface
         $this->output->writeln("-- BEGIN STRUCTURE $tableName", OutputInterface::OUTPUT_RAW);
         $this->output->writeln("DROP TABLE IF EXISTS `$tableName`;", OutputInterface::OUTPUT_RAW);
 
-        $tableCreationCommand = $this->db->fetchColumn("SHOW CREATE TABLE `$tableName`", [], 1);
+        $tableCreationCommand = $this->db->fetchAssociative("SHOW CREATE TABLE `$tableName`", [])['Create Table'];
 
         if (!$config->keepAutoIncrement()) {
             $tableCreationCommand = preg_replace('/ AUTO_INCREMENT=\d*/', '', $tableCreationCommand);
@@ -66,7 +66,7 @@ class MysqlOutputFormatDriver implements OutputFormatDriverInterface
     {
         $tableName = $asset->getName();
 
-        $triggers = $this->db->fetchAll(sprintf('SHOW TRIGGERS LIKE %s', $this->db->quote($tableName)));
+        $triggers = $this->db->fetchAllAssociative(sprintf('SHOW TRIGGERS LIKE %s', $this->db->quote($tableName)));
 
         if (!$triggers) {
             return;
@@ -78,7 +78,7 @@ class MysqlOutputFormatDriver implements OutputFormatDriverInterface
         $this->output->writeln("DELIMITER ;;\n");
 
         foreach ($triggers as $row) {
-            $createTriggerCommand = $this->db->fetchColumn("SHOW CREATE TRIGGER `{$row['Trigger']}`", [], 2);
+            $createTriggerCommand = $this->db->fetchAssociative("SHOW CREATE TRIGGER `{$row['Trigger']}`", [])['SQL Original Statement'];
 
             if (Table::DEFINER_NO_DEFINER === $level) {
                 $createTriggerCommand = preg_replace('/DEFINER=`[^`]*`@`[^`]*` /', '', $createTriggerCommand);
@@ -95,7 +95,7 @@ class MysqlOutputFormatDriver implements OutputFormatDriverInterface
         $viewName = $asset->getName();
         $this->output->writeln("-- BEGIN VIEW $viewName", OutputInterface::OUTPUT_RAW);
 
-        $createViewCommand = $this->db->fetchColumn("SHOW CREATE VIEW `{$viewName}`", [], 1);
+        $createViewCommand = $this->db->fetchAssociative("SHOW CREATE VIEW `{$viewName}`", [])['Create View'];
 
         if (Table::DEFINER_NO_DEFINER === $config->getViewDefinerLevel()) {
             $createViewCommand = preg_replace('/DEFINER=`[^`]*`@`[^`]*` /', '', $createViewCommand);
