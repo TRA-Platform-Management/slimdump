@@ -131,7 +131,7 @@ class Dumper
 
         $this->outputFormatDriver->beginTableDataDump($asset, $tableConfig);
 
-        foreach ($this->connection->executeQuery($s) as $row) {
+        foreach ($this->connection->executeQuery($s)->fetchAllAssociative() as $row) {
             $this->outputFormatDriver->dumpTableRow($row, $asset, $tableConfig);
 
             $progress->advance();
