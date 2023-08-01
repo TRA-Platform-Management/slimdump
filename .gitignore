@@ -5,3 +5,9 @@ phpunit.xml
 .php-cs-fixer.cache
 .phpunit.result.cache
 *.local
+.idea/.gitignore
+.idea/modules.xml
+.idea/php.xml
+.idea/sf_slimdump.iml
+.idea/vcs.xml
+nbproject/
