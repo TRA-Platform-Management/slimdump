@@ -3,7 +3,6 @@
 namespace Webfactory\Slimdump\Database;
 
 use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\Driver\PDOConnection;
 use Doctrine\DBAL\Schema;
 use Doctrine\DBAL\Schema\AbstractAsset;
 use Doctrine\DBAL\Types\BinaryType;
